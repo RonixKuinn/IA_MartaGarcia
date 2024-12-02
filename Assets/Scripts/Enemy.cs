@@ -12,13 +12,19 @@ public class Enemy : MonoBehaviour
         Searching
     }
 
-public EnemyState currentState;
-private NavMeshAgent _AIAgent;
-[SerializeField] Transform[] _patrolPoints;
+    public EnemyState currentState;
+    private NavMeshAgent _AIAgent;
+    [SerializeField] Transform[] _patrolPoints;
+
+    void Awake()
+    {
+        _AIAgent = GetComponent<NavMeshAgent>();
+    }
 
     void Start()
     {
-        
+        currentState = EnemyState.Patrolling;
+        SetRandomPatrolPoint();
     }
 
     void Update()
@@ -59,5 +65,14 @@ private NavMeshAgent _AIAgent;
     void SetRandomPatrolPoint()
     {
         _AIAgent.destination = _patrolPoints[Random.Range(0, _patrolPoints.Length)].position;
+    }
+
+    void OnDrawGizmos()
+    {
+        foreach(Transform point in _patrolPoints)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(point.position, 1);
+        }
     }
 }
