@@ -107,6 +107,7 @@ public class Enemy : MonoBehaviour
         else
         {
             currentState = EnemyState.Patrolling;
+            _searchTimer = 0;
         }
     }
 
