@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+//using System.Numerics;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -12,16 +13,21 @@ public class Enemy : MonoBehaviour
         Searching
     }
 
+    // ······ Cosas generales ······//
     public EnemyState currentState;
     private NavMeshAgent _AIAgent;
     private Transform _playerTransform;
 
-    // ······ Cosas  ······//
+    // ······ Cosas patrulla ······//
     [SerializeField] Transform[] _patrolPoints;
-
+    [SerializeField] Vector2 _patrolAreaSize = new Vector2(5, 5);
+    [SerializeField] Transform _patrolAreaCenter;
+ 
     // ······ Cosas detección ······//
     [SerializeField] float _visionRange = 5;
     [SerializeField] float _visionAngle = 120;
+    private Vector3 _playerLastPosition;
+
 
     void Awake()
     {
@@ -86,6 +92,10 @@ public class Enemy : MonoBehaviour
         float angleToPlayer = Vector3.Angle(transform.forward, directionToPlayer);
         float distanceToPlayer = Vector3.Distance(transform.position, _playerTransform.position);
 
+        if(_playerTransform.position == _playerLastPosition)
+        {
+            return true;
+        }
         if(distanceToPlayer > _visionRange)
         {
             return false;
@@ -96,21 +106,44 @@ public class Enemy : MonoBehaviour
             return false;
         }
 
+        RaycastHit hit;
+        if(Physics.Raycast(transform.position, directionToPlayer, out hit, distanceToPlayer))
+        {
+            if(hit.collider.CompareTag("Player"))
+            {
+                _playerLastPosition = _playerTransform.position;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 
     void SetRandomPatrolPoint()
     {
-        _AIAgent.destination = _patrolPoints[Random.Range(0, _patrolPoints.Length)].position;
+        //_AIAgent.destination = _patrolPoints[Random.Range(0, _patrolPoints.Length)].position;
+        float RandomX = Random.Range(-_patrolAreaSize.x * 5f, _patrolAreaSize.x * 5f);
+        float RandomZ = Random.Range(-_patrolAreaSize.y * 5f, _patrolAreaSize.y * 5f);
+
+        Vector3 randomPoint = new Vector3(RandomX, 0, RandomZ) + _patrolAreaCenter.position;
+
+        _AIAgent.destination = randomPoint;
     }
 
     void OnDrawGizmos()
     {
-        foreach(Transform point in _patrolPoints)
+        /*foreach(Transform point in _patrolPoints)
         {
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(point.position, 1);
-        }
+        }*/
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireCube(_patrolAreaCenter.position, new Vector3(_patrolAreaSize.x, 1, _patrolAreaSize.y));
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, _visionRange);
